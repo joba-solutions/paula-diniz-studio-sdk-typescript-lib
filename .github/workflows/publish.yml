@@ -1,0 +1,59 @@
+name: Publish to AWS CodeArtifact
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/GitHubActions-CodeArtifactPublish
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to CodeArtifact
+        run: aws codeartifact login --tool npm --domain joba --domain-owner ${{ vars.AWS_ACCOUNT_ID }} --repository internal --namespace @joba --region ${{ vars.AWS_REGION }}
+
+      - name: Install
+        run: npm ci
+
+      - name: Compute next version
+        id: version
+        run: |
+          git fetch --tags --force
+          NEW=$(node .github/scripts/next_version.mjs)
+          echo "new_version=$NEW" >> "$GITHUB_OUTPUT"
+          echo "Version: $NEW"
+
+      - name: Set version
+        run: npm version "${{ steps.version.outputs.new_version }}" --no-git-tag-version
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish
+        run: npm publish
+
+      - name: Tag and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "v${{ steps.version.outputs.new_version }}"
+          git push origin "v${{ steps.version.outputs.new_version }}"
