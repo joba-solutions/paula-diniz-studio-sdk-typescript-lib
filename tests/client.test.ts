@@ -24,14 +24,14 @@ function jsonResponse(body: unknown, status = 200, headers: Record<string, strin
 function client(overrides: Partial<ClientOptions> = {}) {
   return createClient({
     base: 'https://api.studio.example.com',
-    getToken: async () => 'machine-token',
+    getToken: async () => 'access-token',
     ...overrides,
   });
 }
 
 describe('follow', () => {
   it('sets the bearer header, expands the placeholders and appends the query', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ subject: 'mch_1' }));
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ subject: 'user_1' }));
     vi.stubGlobal('fetch', fetchMock);
 
     const result = await client().follow(
@@ -39,10 +39,10 @@ describe('follow', () => {
       { params: { id: '01H' }, query: { view: 'full' } },
     );
 
-    expect(result).toEqual({ subject: 'mch_1' });
+    expect(result).toEqual({ subject: 'user_1' });
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('https://api.studio.example.com/artworks/01H?view=full');
-    expect((init.headers as Headers).get('Authorization')).toBe('Bearer machine-token');
+    expect((init.headers as Headers).get('Authorization')).toBe('Bearer access-token');
   });
 
   it('parses the home document and the me response through their links', async () => {
@@ -51,8 +51,8 @@ describe('follow', () => {
       .mockResolvedValueOnce(jsonResponse(studioHomeDocument))
       .mockResolvedValueOnce(
         jsonResponse({
-          subject: 'mch_1',
-          kind: 'machine',
+          subject: 'user_1',
+          kind: 'artist',
           links: { self: { href: '/me', rel: 'self', httpMethod: 'GET' } },
         }),
       );
@@ -62,7 +62,7 @@ describe('follow', () => {
     const home = resolveStudioHome(document.links);
     const me = await client().follow(home.me);
 
-    expect(me).toMatchObject({ subject: 'mch_1', kind: 'machine' });
+    expect(me).toMatchObject({ subject: 'user_1', kind: 'artist' });
   });
 
   it('rejects a home document that does not match the contract', async () => {
@@ -78,7 +78,7 @@ describe('follow', () => {
     const me = resolveStudioHome(studioHomeDocument.links).me;
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(jsonResponse({ subject: 'mch_1', kind: 'robot', links: {} })),
+      vi.fn().mockResolvedValue(jsonResponse({ subject: 'user_1', kind: 'robot', links: {} })),
     );
 
     await expect(client().follow(me)).rejects.toBeInstanceOf(ZodError);
@@ -138,13 +138,13 @@ describe('follow', () => {
       .fn()
       .mockResolvedValueOnce(new Response('', { status: 503 }))
       .mockResolvedValueOnce(new Response('', { status: 503 }))
-      .mockResolvedValueOnce(jsonResponse({ subject: 'mch_1' }));
+      .mockResolvedValueOnce(jsonResponse({ subject: 'user_1' }));
     vi.stubGlobal('fetch', fetchMock);
 
     const promise = client().follow({ href: '/me', rel: 'me', httpMethod: 'GET' });
     await vi.advanceTimersByTimeAsync(5000);
 
-    expect(await promise).toEqual({ subject: 'mch_1' });
+    expect(await promise).toEqual({ subject: 'user_1' });
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
@@ -153,14 +153,14 @@ describe('follow', () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(new Response('', { status: 429 }))
-      .mockResolvedValueOnce(jsonResponse({ subject: 'mch_1' }));
+      .mockResolvedValueOnce(jsonResponse({ subject: 'user_1' }));
     vi.stubGlobal('fetch', fetchMock);
     const errorFor = vi.fn((failure: ApiError) => new Error(failure.message));
 
     const promise = client({ errorFor }).follow({ href: '/me', rel: 'me', httpMethod: 'GET' });
     await vi.advanceTimersByTimeAsync(5000);
 
-    expect(await promise).toEqual({ subject: 'mch_1' });
+    expect(await promise).toEqual({ subject: 'user_1' });
     expect(errorFor).not.toHaveBeenCalled();
   });
 
