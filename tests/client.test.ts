@@ -7,6 +7,7 @@ import {
   studioHome,
   type ClientOptions,
 } from '../src/index.js';
+import categoriesDocument from './fixtures/categories.json' with { type: 'json' };
 import studioHomeDocument from './fixtures/home.json' with { type: 'json' };
 
 afterEach(() => {
@@ -45,7 +46,7 @@ describe('follow', () => {
     expect((init.headers as Headers).get('Authorization')).toBe('Bearer access-token');
   });
 
-  it('parses the home document and the me response through their links', async () => {
+  it('parses the home, me and categories documents through their links', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(jsonResponse(studioHomeDocument))
@@ -55,14 +56,17 @@ describe('follow', () => {
           kind: 'artist',
           links: { self: { href: '/me', rel: 'self', httpMethod: 'GET' } },
         }),
-      );
+      )
+      .mockResolvedValueOnce(jsonResponse(categoriesDocument));
     vi.stubGlobal('fetch', fetchMock);
 
     const document = await client().follow(studioHome);
     const home = resolveStudioHome(document.links);
     const me = await client().follow(home.me);
+    const categories = await client().follow(home.categories);
 
     expect(me).toMatchObject({ subject: 'user_1', kind: 'artist' });
+    expect(categories).toEqual(categoriesDocument);
   });
 
   it('rejects a home document that does not match the contract', async () => {
