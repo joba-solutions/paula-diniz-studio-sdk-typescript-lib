@@ -12,10 +12,32 @@ describe('resolveStudioHome', () => {
       rel: 'categories',
       httpMethod: 'GET',
     });
+    expect(home.artworks).toMatchObject({
+      href: '/artworks',
+      rel: 'artworks',
+      httpMethod: 'GET',
+    });
+    expect(home.artwork).toMatchObject({
+      href: '/artworks/{id}',
+      rel: 'artwork',
+      httpMethod: 'GET',
+      templated: true,
+    });
+    expect(home.createArtwork).toMatchObject({
+      href: '/artworks',
+      rel: 'create-artwork',
+      httpMethod: 'POST',
+    });
   });
 
-  it('advertises the me and categories links', () => {
-    expect(Object.keys(studioHomeDocument.links)).toEqual(['me', 'categories']);
+  it('advertises the five entry links in order', () => {
+    expect(Object.keys(studioHomeDocument.links)).toEqual([
+      'me',
+      'categories',
+      'artworks',
+      'artwork',
+      'create-artwork',
+    ]);
   });
 
   it('throws when the server drops the me link', () => {
@@ -26,6 +48,36 @@ describe('resolveStudioHome', () => {
     const links = { me: studioHomeDocument.links.me };
 
     expect(() => resolveStudioHome(links)).toThrow('home document missing link "categories"');
+  });
+
+  it('throws when the server drops the artworks link', () => {
+    const links = {
+      me: studioHomeDocument.links.me,
+      categories: studioHomeDocument.links.categories,
+    };
+
+    expect(() => resolveStudioHome(links)).toThrow('home document missing link "artworks"');
+  });
+
+  it('throws when the server drops the artwork link', () => {
+    const links = {
+      me: studioHomeDocument.links.me,
+      categories: studioHomeDocument.links.categories,
+      artworks: studioHomeDocument.links.artworks,
+    };
+
+    expect(() => resolveStudioHome(links)).toThrow('home document missing link "artwork"');
+  });
+
+  it('throws when the server drops the create-artwork link', () => {
+    const links = {
+      me: studioHomeDocument.links.me,
+      categories: studioHomeDocument.links.categories,
+      artworks: studioHomeDocument.links.artworks,
+      artwork: studioHomeDocument.links.artwork,
+    };
+
+    expect(() => resolveStudioHome(links)).toThrow('home document missing link "create-artwork"');
   });
 });
 

@@ -1,0 +1,61 @@
+{
+  "id": "01JX8Z5K4M6Q2R7T9V1W3Y5A7B",
+  "version": 3,
+  "published": true,
+  "slug": { "ptBR": "guardiao-da-floresta", "en": "forest-guardian" },
+  "title": { "ptBR": "Guardião da Floresta", "en": "Forest Guardian" },
+  "year": 2024,
+  "medium": { "ptBR": "óleo sobre tela", "en": "oil on canvas" },
+  "dimensions": { "widthCm": 120, "heightCm": 90 },
+  "categoryId": "animals",
+  "description": {
+    "ptBR": "Uma onça observa a mata ao amanhecer.",
+    "en": "A jaguar watches the forest at dawn."
+  },
+  "images": [
+    {
+      "mediaId": "01JX8Z5K4M6Q2R7T9V1W3Y5A7D",
+      "role": "main",
+      "sortOrder": 0,
+      "altText": {
+        "ptBR": "Pintura de uma onça entre folhas verdes.",
+        "en": "Painting of a jaguar among green leaves."
+      }
+    },
+    {
+      "mediaId": "01JX8Z5K4M6Q2R7T9V1W3Y5A7E",
+      "role": "detail",
+      "sortOrder": 1,
+      "altText": {
+        "ptBR": "Detalhe do focinho da onça.",
+        "en": "Close-up of the jaguar's muzzle."
+      }
+    }
+  ],
+  "sortOrder": 10,
+  "tags": { "availability": "available", "priority": "high" },
+  "exhibition": {
+    "label": "Salão de Arte",
+    "text": {
+      "ptBR": "Exposto no Salão de Arte de 2024.",
+      "en": "Shown at the 2024 Art Salon."
+    }
+  },
+  "note": { "ptBR": "Série Mata.", "en": "Forest series." },
+  "createdAt": "2026-11-01T09:00:00Z",
+  "updatedAt": "2026-11-09T12:00:00Z",
+  "createdBy": { "subject": "user_1", "kind": "artist" },
+  "updatedBy": { "subject": "user_1", "kind": "artist" },
+  "links": {
+    "self": {
+      "href": "/artworks/01JX8Z5K4M6Q2R7T9V1W3Y5A7B",
+      "rel": "self",
+      "httpMethod": "GET"
+    },
+    "update": {
+      "href": "/artworks/01JX8Z5K4M6Q2R7T9V1W3Y5A7B",
+      "rel": "update",
+      "httpMethod": "PATCH"
+    }
+  }
+}

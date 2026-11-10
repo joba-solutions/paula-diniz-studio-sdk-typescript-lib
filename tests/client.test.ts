@@ -7,6 +7,9 @@ import {
   studioHome,
   type ClientOptions,
 } from '../src/index.js';
+import { artworkSchema } from '../src/models.js';
+import artworkDocument from './fixtures/artwork.json' with { type: 'json' };
+import artworksDocument from './fixtures/artworks.json' with { type: 'json' };
 import categoriesDocument from './fixtures/categories.json' with { type: 'json' };
 import studioHomeDocument from './fixtures/home.json' with { type: 'json' };
 
@@ -67,6 +70,72 @@ describe('follow', () => {
 
     expect(me).toMatchObject({ subject: 'user_1', kind: 'artist' });
     expect(categories).toEqual(categoriesDocument);
+  });
+
+  it('appends the list filters and parses the artwork collection', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(artworksDocument));
+    vi.stubGlobal('fetch', fetchMock);
+    const home = resolveStudioHome(studioHomeDocument.links);
+
+    const collection = await client().follow(home.artworks, {
+      query: { published: 'true', categoryId: 'animals', limit: '10' },
+    });
+
+    expect(collection).toEqual(artworksDocument);
+    const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(
+      'https://api.studio.example.com/artworks?published=true&categoryId=animals&limit=10',
+    );
+  });
+
+  it('expands the templated artwork link and parses the work', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(artworkDocument));
+    vi.stubGlobal('fetch', fetchMock);
+    const home = resolveStudioHome(studioHomeDocument.links);
+
+    const artwork = await client().follow(home.artwork, { params: { id: artworkDocument.id } });
+
+    expect(artwork).toEqual(artworkDocument);
+    const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`https://api.studio.example.com/artworks/${artworkDocument.id}`);
+  });
+
+  it('sends a create body with its idempotency key', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(artworkDocument, 201));
+    vi.stubGlobal('fetch', fetchMock);
+    const home = resolveStudioHome(studioHomeDocument.links);
+    const body = { title: { ptBR: 'Guardião da Floresta', en: 'Forest Guardian' } };
+
+    const created = await client().follow(home.createArtwork, {
+      body,
+      idempotencyKey: 'create-1',
+    });
+
+    expect(created).toEqual(artworkDocument);
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://api.studio.example.com/artworks');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body as string)).toEqual(body);
+    const headers = init.headers as Headers;
+    expect(headers.get('Content-Type')).toBe('application/json');
+    expect(headers.get('Idempotency-Key')).toBe('create-1');
+  });
+
+  it('sends a patch body that keeps an explicit null and its idempotency key', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(artworkDocument));
+    vi.stubGlobal('fetch', fetchMock);
+    const artwork = artworkSchema.parse(artworkDocument);
+
+    await client().follow(artwork.links.update, {
+      body: { version: 2, year: null },
+      idempotencyKey: 'update-1',
+    });
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`https://api.studio.example.com${artwork.links.update.href}`);
+    expect(init.method).toBe('PATCH');
+    expect(JSON.parse(init.body as string)).toEqual({ version: 2, year: null });
+    expect((init.headers as Headers).get('Idempotency-Key')).toBe('update-1');
   });
 
   it('rejects a home document that does not match the contract', async () => {
