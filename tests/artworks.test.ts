@@ -2,12 +2,27 @@ import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
 import {
   artworkCollectionSchema,
+  artworkImageSchema,
   artworkPatchSchema,
   artworkSchema,
   createArtworkSchema,
 } from '../src/models.js';
 import artworkDocument from './fixtures/artwork.json' with { type: 'json' };
 import artworksDocument from './fixtures/artworks.json' with { type: 'json' };
+
+describe('artworkImageSchema', () => {
+  it('parses an image with alt text', () => {
+    const image = artworkDocument.images[0];
+
+    expect(artworkImageSchema.parse(image)).toEqual(image);
+  });
+
+  it('parses a draft image without alt text', () => {
+    const image = { mediaId: '01JX8Z5K4M6Q2R7T9V1W3Y5A7F', role: 'main', sortOrder: 0 };
+
+    expect(artworkImageSchema.parse(image)).toEqual(image);
+  });
+});
 
 describe('artworkSchema', () => {
   it('parses a work with every optional field', () => {
@@ -80,6 +95,14 @@ describe('createArtworkSchema', () => {
 
   it('accepts a complete localized pair', () => {
     const draft = { title: { ptBR: 'Sem título', en: 'Untitled' }, sortOrder: 0 };
+
+    expect(createArtworkSchema.parse(draft)).toEqual(draft);
+  });
+
+  it('accepts a draft image without alt text', () => {
+    const draft = {
+      images: [{ mediaId: '01JX8Z5K4M6Q2R7T9V1W3Y5A7F', role: 'main', sortOrder: 0 }],
+    };
 
     expect(createArtworkSchema.parse(draft)).toEqual(draft);
   });
