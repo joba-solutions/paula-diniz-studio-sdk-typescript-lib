@@ -65,7 +65,13 @@
       "id": "01JX8Z5K4M6Q2R7T9V1W3Y5A7C",
       "version": 1,
       "published": false,
-      "images": [],
+      "images": [
+        {
+          "mediaId": "01JX8Z5K4M6Q2R7T9V1W3Y5A7F",
+          "role": "main",
+          "sortOrder": 0
+        }
+      ],
       "sortOrder": 0,
       "tags": {},
       "createdAt": "2026-11-09T12:00:00Z",

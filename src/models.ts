@@ -58,19 +58,19 @@ export type ImageRole = 'main' | 'detail' | 'process' | 'room';
 
 export const imageRoleSchema: z.ZodType<ImageRole> = z.enum(['main', 'detail', 'process', 'room']);
 
-/** One image attached to an artwork, referencing a media record. */
+/** One image attached to an artwork, referencing a media record. Alt text is optional until the work is published. */
 export interface ArtworkImage {
   mediaId: string;
   role: ImageRole;
   sortOrder: number;
-  altText: LocalizedText;
+  altText?: LocalizedText | undefined;
 }
 
 export const artworkImageSchema: z.ZodType<ArtworkImage> = z.object({
   mediaId: z.string(),
   role: imageRoleSchema,
   sortOrder: z.number().int().min(0),
-  altText: localizedTextSchema,
+  altText: localizedTextSchema.optional(),
 });
 
 /** The physical size of a work, in centimetres. */
